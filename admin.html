@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scorer Admin Panel</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #333; color: white; display: flex; justify-content: center; padding: 20px; }
+        .app-container { background: #222; padding: 20px; border-radius: 12px; width: 100%; max-width: 400px; text-align: center; }
+        .admin-panel { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
+        button { padding: 15px; font-size: 16px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; background: #444; color: white; transition: 0.2s; }
+        button:hover { background: #555; }
+        .btn-wicket { background: #e41e3f; }
+        .btn-reset { background: #ff9800; width: 100%; margin-top: 15px; }
+        h2 { margin: 0; padding-bottom: 10px; border-bottom: 1px solid #555; }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <h2>Umpire / Scorer Panel</h2>
+        <p>Current Score: <span id="runs">0</span>/<span id="wickets">0</span> (<span id="overs">0.0</span>)</p>
+
+        <div class="admin-panel">
+            <button onclick="updateScore(0, 0)">0 (Dot)</button>
+            <button onclick="updateScore(1, 0)">1 Run</button>
+            <button onclick="updateScore(2, 0)">2 Runs</button>
+            <button onclick="updateScore(4, 0)">4 (Four)</button>
+            <button onclick="updateScore(6, 0)">6 (Six)</button>
+            <button class="btn-wicket" onclick="updateScore(0, 1)">Wicket!</button>
+        </div>
+        
+        <button class="btn-reset" onclick="resetMatch()">Reset Match / Nayi Innings</button>
+    </div>
+
+    <script>
+        // --- APNI FIREBASE CONFIG YAHAN BHI PASTE KAREIN ---
+        const firebaseConfig = {
+           apiKey: "AIzaSyBpzzr3vTQoA0WrIUpgr2VV-oNO7QuLekc",
+            authDomain: "cricket-live-c10f1.firebaseapp.com",
+            databaseURL: "https://cricket-live-c10f1-default-rtdb.firebaseio.com",
+            projectId: "cricket-live-c10f1",
+            storageBucket: "cricket-live-c10f1.firebasestorage.app",
+            messagingSenderId: "707923793126",
+            appId: "1:707923793126:web:bce2ce512305601e6cd727"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        let currentRuns = 0, currentWickets = 0, currentBalls = 0;
+
+        // Taki admin ko bhi live score dikhe
+        database.ref('liveMatch/score').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if(data) {
+                currentRuns = data.runs; currentWickets = data.wickets; currentBalls = data.balls;
+                document.getElementById('runs').innerText = currentRuns;
+                document.getElementById('wickets').innerText = currentWickets;
+                document.getElementById('overs').innerText = Math.floor(currentBalls / 6) + "." + (currentBalls % 6);
+            }
+        });
+
+        // Data Update Karne Ka Function
+        function updateScore(runsToAdd, wicketsToAdd) {
+            if (currentWickets < 10) {
+                database.ref('liveMatch/score').set({
+                    runs: currentRuns + runsToAdd,
+                    wickets: currentWickets + wicketsToAdd,
+                    balls: currentBalls + 1
+                });
+            } else { alert("Team All Out!"); }
+        }
+
+        function resetMatch() {
+            if (confirm("Match Reset karein?")) {
+                database.ref('liveMatch/score').set({ runs: 0, wickets: 0, balls: 0 });
+            }
+        }
+    </script>
+</body>
+</html>

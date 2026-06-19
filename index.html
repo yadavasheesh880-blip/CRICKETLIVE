@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Cricket Score</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
+        .app-container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        .score-box { background: #1877f2; color: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .score { font-size: 48px; font-weight: bold; }
+        .overs { font-size: 20px; margin-top: 10px; }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <h2>Team A vs Team B</h2>
+        <p style="color: red; font-weight: bold;">🔴 LIVE</p>
+
+        <div class="score-box">
+            <div class="score">
+                <span id="runs">0</span> / <span id="wickets">0</span>
+            </div>
+            <div class="overs">
+                Overs: <span id="overs">0.0</span>
+            </div>
+        </div>
+        <p>Yeh score apne aap update hoga...</p>
+    </div>
+
+    <script>
+        // --- APNI FIREBASE CONFIG YAHAN PASTE KAREIN ---
+        const firebaseConfig = {
+           apiKey: "AIzaSyBpzzr3vTQoA0WrIUpgr2VV-oNO7QuLekc",
+            authDomain: "cricket-live-c10f1.firebaseapp.com",
+            databaseURL: "https://cricket-live-c10f1-default-rtdb.firebaseio.com",
+            projectId: "cricket-live-c10f1",
+            storageBucket: "cricket-live-c10f1.firebasestorage.app",
+            messagingSenderId: "707923793126",
+            appId: "1:707923793126:web:bce2ce512305601e6cd727"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Sirf Data Read Karega
+        database.ref('liveMatch/score').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if(data) {
+                document.getElementById('runs').innerText = data.runs;
+                document.getElementById('wickets').innerText = data.wickets;
+                
+                let overCount = Math.floor(data.balls / 6);
+                let ballCount = data.balls % 6;
+                document.getElementById('overs').innerText = overCount + "." + ballCount;
+            }
+        });
+    </script>
+</body>
+</html>
