@@ -3,31 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Cricket Score</title>
+    <title>CricScore Live</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
-        .app-container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
-        .score-box { background: #1877f2; color: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
-        .score { font-size: 48px; font-weight: bold; }
-        .overs { font-size: 20px; margin-top: 10px; }
+        :root {
+            --primary: #2c3e50; --primary-light: #34495e; --secondary: #2ecc71;
+            --bg-color: #f5f6fa; --card-bg: #ffffff; --text-main: #333333; --text-muted: #7f8c8d;
+            --text-on-primary: #ffffff; --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --border-radius: 12px; --font-family: 'Segoe UI', sans-serif;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-family); }
+        body { background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); color: var(--text-main); padding-bottom: 50px; }
+        
+        nav { background: var(--primary); color: var(--text-on-primary); padding: 15px 30px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border-bottom: 2px solid var(--secondary); }
+        .nav-brand { font-size: 24px; font-weight: 800; letter-spacing: 1.5px; }
+        
+        .container { max-width: 650px; margin: 0 auto; padding: 30px; }
+        .match-card { background: #ffffff; padding: 30px; border-radius: var(--border-radius); text-align: center; box-shadow: var(--shadow-lg); border: 1px solid #e1e8ed; }
+        .teams-title { font-size: 18px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; }
+        .main-score { font-size: 64px; font-weight: 900; background: -webkit-linear-gradient(var(--primary), var(--primary-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 10px 0; line-height: 1; }
+        .overs-rr { display: flex; justify-content: space-around; color: var(--primary); font-size: 16px; font-weight: 700; background: rgba(44, 62, 80, 0.05); padding: 15px; border-radius: var(--border-radius); margin-top: 15px;}
+        .target-box { text-align: center; background: rgba(0, 200, 83, 0.1); color: var(--secondary); padding: 12px; border-radius: var(--border-radius); margin-top: 15px; font-weight: bold; border: 2px solid var(--secondary); display: none; font-size: 18px;}
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 25px; font-size: 15px;}
+        th, td { padding: 14px; text-align: center; border-bottom: 1px solid #eee; }
+        th { color: var(--text-muted); font-weight: 600; font-size: 13px; text-transform: uppercase; }
+        td { font-weight: 600; color: var(--primary); }
+        .text-left { text-align: left; }
+        .striker { color: var(--secondary); font-weight: 800; position: relative; padding-left: 20px; }
+        .striker::before { content: '🏏 '; position: absolute; left: 0; top: 50%; transform: translateY(-50%); font-size: 16px; }
+        .status-msg { margin-top: 20px; padding: 15px; background: #fff3cd; color: #856404; border-radius: 8px; font-weight: bold; display: none; }
     </style>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
 <body>
-    <div class="app-container">
-        <h2>Team A vs Team B</h2>
-        <p style="color: red; font-weight: bold;">🔴 LIVE</p>
 
-        <div class="score-box">
-            <div class="score">
-                <span id="runs">0</span> / <span id="wickets">0</span>
+    <nav>
+        <div class="nav-brand">CricScore Premium 🔴 LIVE</div>
+    </nav>
+
+    <div class="container">
+        <div class="match-card" id="matchContainer" style="display: none;">
+            <div class="match-header">
+                <div class="teams-title" id="liveTeamsTitle">Waiting for Match...</div>
+                <div class="main-score"><span id="liveRuns">0</span>-<span id="liveWickets">0</span> <span style="font-size: 22px; color: var(--text-muted); font-weight: 600;">(<span id="liveOvers">0.0</span>)</span></div>
+                <div class="overs-rr">
+                    <span>CRR: <span id="liveCRR">0.00</span></span>
+                    <span>Innings: <span id="liveInnings">1</span></span>
+                </div>
+                <div class="target-box" id="targetBox">Target: <span id="liveTarget">0</span></div>
             </div>
-            <div class="overs">
-                Overs: <span id="overs">0.0</span>
-            </div>
+
+            <table>
+                <thead><tr><th class="text-left">Batsman</th><th>R</th><th>B</th></tr></thead>
+                <tbody id="batsmanTable"></tbody>
+            </table>
+
+            <table style="margin-bottom: 10px;">
+                <thead><tr><th class="text-left">Bowler</th><th>O</th><th>R</th><th>W</th></tr></thead>
+                <tbody id="bowlerTable"></tbody>
+            </table>
+            
+            <div class="status-msg" id="statusMsg"></div>
         </div>
-        <p>Yeh score apne aap update hoga...</p>
+        <div id="noMatchMsg" style="text-align: center; margin-top: 50px; font-size: 18px; color: #7f8c8d; font-weight: bold;">
+            No Live Match Running Right Now.
+        </div>
     </div>
 
     <script>
@@ -41,20 +82,52 @@
             messagingSenderId: "707923793126",
             appId: "1:707923793126:web:bce2ce512305601e6cd727"
         };
-
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // Sirf Data Read Karega
-        database.ref('liveMatch/score').on('value', (snapshot) => {
+        database.ref('premiumMatch/live').on('value', (snapshot) => {
             const data = snapshot.val();
-            if(data) {
-                document.getElementById('runs').innerText = data.runs;
-                document.getElementById('wickets').innerText = data.wickets;
+            if(data && data.active) {
+                document.getElementById('noMatchMsg').style.display = 'none';
+                document.getElementById('matchContainer').style.display = 'block';
+
+                document.getElementById('liveTeamsTitle').innerText = `${data.batTeam} vs ${data.bowlTeam}`;
+                document.getElementById('liveRuns').innerText = data.runs;
+                document.getElementById('liveWickets').innerText = data.wickets;
                 
                 let overCount = Math.floor(data.balls / 6);
-                let ballCount = data.balls % 6;
-                document.getElementById('overs').innerText = overCount + "." + ballCount;
+                let ballsCount = data.balls % 6;
+                document.getElementById('liveOvers').innerText = `${overCount}.${ballsCount}`;
+                
+                let oversBowled = data.balls / 6;
+                document.getElementById('liveCRR').innerText = oversBowled > 0 ? (data.runs / oversBowled).toFixed(2) : '0.00';
+                document.getElementById('liveInnings').innerText = data.innings;
+
+                if(data.target && data.innings === 2) {
+                    document.getElementById('targetBox').style.display = 'block';
+                    document.getElementById('liveTarget').innerText = data.target;
+                } else {
+                    document.getElementById('targetBox').style.display = 'none';
+                }
+
+                if(data.matchStatus) {
+                    document.getElementById('statusMsg').style.display = 'block';
+                    document.getElementById('statusMsg').innerText = data.matchStatus;
+                } else {
+                    document.getElementById('statusMsg').style.display = 'none';
+                }
+
+                // Dummy Table Data based on runs
+                document.getElementById('batsmanTable').innerHTML = `
+                    <tr><td class="text-left striker">Striker *</td><td>${Math.floor(data.runs * 0.6)}</td><td>${Math.floor(data.balls * 0.5)}</td></tr>
+                    <tr><td class="text-left">Non-Striker</td><td>${Math.floor(data.runs * 0.3)}</td><td>${Math.floor(data.balls * 0.4)}</td></tr>
+                `;
+                document.getElementById('bowlerTable').innerHTML = `
+                    <tr><td class="text-left">Current Bowler</td><td>${overCount}.${ballsCount}</td><td>${data.runs}</td><td>${data.wickets}</td></tr>
+                `;
+            } else {
+                document.getElementById('noMatchMsg').style.display = 'block';
+                document.getElementById('matchContainer').style.display = 'none';
             }
         });
     </script>
