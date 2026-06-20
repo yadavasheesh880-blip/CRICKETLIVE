@@ -14,7 +14,12 @@
             --border-radius: 12px; --font-family: 'Segoe UI', sans-serif; --transition: 0.3s ease-in-out;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-family); }
-        body { background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); color: var(--text-main); padding-bottom: 50px; }
+        body { background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); color: var(--text-main); padding-bottom: 50px; min-height: 100vh; }
+        
+        /* LOGIN SCREEN STYLES */
+        #loginScreen { display: flex; height: 100vh; align-items: center; justify-content: center; padding: 20px; }
+        .login-card { background: white; padding: 40px 30px; border-radius: var(--border-radius); box-shadow: var(--shadow-lg); width: 100%; max-width: 400px; text-align: center; border: 1px solid #e1e8ed; }
+        .login-card h2 { color: var(--primary); margin-bottom: 25px; font-size: 28px; }
         
         nav { background: var(--primary); color: var(--text-on-primary); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); position: sticky; top: 0; z-index: 100; border-bottom: 2px solid var(--secondary); }
         .nav-brand { font-size: 24px; font-weight: 800; letter-spacing: 1.5px; }
@@ -56,97 +61,129 @@
 </head>
 <body>
 
-    <nav>
-        <div class="nav-brand">Admin Area</div>
-        <div class="nav-links">
-            <button onclick="switchTab('setup')" class="active" id="tab-setup">Match</button>
-            <button onclick="switchTab('teams')" id="tab-teams">Teams</button>
-            <button onclick="switchTab('history')" id="tab-history">History</button>
+    <div id="loginScreen">
+        <div class="login-card">
+            <h2>🔒 Admin Login</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Enter secret PIN to manage score</p>
+            <input type="password" id="adminPassword" placeholder="Enter PIN">
+            <button class="btn" onclick="checkLogin()">Unlock App</button>
+            <p id="loginError" style="color: var(--danger); margin-top: 15px; font-weight: bold; display: none;">❌ Incorrect PIN!</p>
         </div>
-    </nav>
+    </div>
 
-    <div class="container">
-        
-        <div id="teams" class="screen">
-            <div class="card">
-                <div class="card-header">🏏 Create New Team</div>
-                <input type="text" id="newTeamName" placeholder="e.g. Mumbai Indian">
-                <button class="btn" onclick="addTeam()">Add Team</button>
+    <div id="mainAdminPanel" style="display: none;">
+        <nav>
+            <div class="nav-brand">Admin Area</div>
+            <div class="nav-links">
+                <button onclick="switchTab('setup')" class="active" id="tab-setup">Match</button>
+                <button onclick="switchTab('teams')" id="tab-teams">Teams</button>
+                <button onclick="switchTab('history')" id="tab-history">History</button>
             </div>
-            <div class="card">
-                <div class="card-header">🏆 Saved Teams</div>
-                <div id="teamsList"></div>
-            </div>
-        </div>
+        </nav>
 
-        <div id="setup" class="screen active">
-            <div class="card">
-                <div class="card-header">🛠 Match Setup</div>
-                <label>Batting Team</label>
-                <select id="teamASelect"><option value="">Select Team</option></select>
-                <label>Bowling Team</label>
-                <select id="teamBSelect"><option value="">Select Team</option></select>
-                <label>Total Overs</label>
-                <select id="oversSelect">
-                    <option value="2">2 Overs</option>
-                    <option value="5">5 Overs</option>
-                    <option value="10">10 Overs</option>
-                    <option value="20">20 Overs</option>
-                </select>
-                <button class="btn btn-success" style="margin-top: 15px;" onclick="startMatch()">Start Match</button>
-                <button class="btn btn-danger" onclick="stopMatch()">End Current Match</button>
-            </div>
-        </div>
-
-        <div id="live" class="screen">
-            <div class="match-card">
-                <div class="teams-title" id="liveTeamsTitle">Team A vs Team B</div>
-                <div class="main-score"><span id="liveRuns">0</span>-<span id="liveWickets">0</span> <span style="font-size: 22px; color: var(--text-muted);">(<span id="liveOvers">0.0</span>)</span></div>
-                <div class="overs-rr">
-                    <span>CRR: <span id="liveCRR">0.00</span></span>
-                    <span>Innings: <span id="liveInnings">1</span></span>
+        <div class="container">
+            <div id="teams" class="screen">
+                <div class="card">
+                    <div class="card-header">🏏 Create New Team</div>
+                    <input type="text" id="newTeamName" placeholder="e.g. Mumbai Indian">
+                    <button class="btn" onclick="addTeam()">Add Team</button>
                 </div>
-                <div class="target-box" id="targetBox">Target: <span id="liveTarget">0</span></div>
-
-                <div class="keypad">
-                    <button class="key-btn" onclick="score(0)"><span class="key-run">0</span>Dot</button>
-                    <button class="key-btn" onclick="score(1)"><span class="key-run">1</span>Run</button>
-                    <button class="key-btn" onclick="score(2)"><span class="key-run">2</span>Runs</button>
-                    <button class="key-btn" onclick="score(3)"><span class="key-run">3</span>Runs</button>
-                    <button class="key-btn" onclick="score(4)"><span class="key-run">4</span>Four</button>
-                    <button class="key-btn" onclick="score(6)"><span class="key-run">6</span>Six</button>
-                    <button class="key-btn key-extra" onclick="extra('wd')">Wide</button>
-                    <button class="key-btn key-extra" onclick="extra('nb')">No Ball</button>
-                    <button class="key-btn key-out" onclick="wicket()">OUT!</button>
-                    <button class="key-btn key-undo" onclick="undo()">↩ Undo</button>
+                <div class="card">
+                    <div class="card-header">🏆 Saved Teams</div>
+                    <div id="teamsList"></div>
                 </div>
             </div>
-        </div>
 
-        <div id="history" class="screen">
-            <div class="card">
-                <div class="card-header">📊 Match History</div>
-                <div id="historyList"></div>
+            <div id="setup" class="screen active">
+                <div class="card">
+                    <div class="card-header">🛠 Match Setup</div>
+                    <label>Batting Team</label>
+                    <select id="teamASelect"><option value="">Select Team</option></select>
+                    <label>Bowling Team</label>
+                    <select id="teamBSelect"><option value="">Select Team</option></select>
+                    <label>Total Overs</label>
+                    <select id="oversSelect">
+                        <option value="2">2 Overs</option>
+                        <option value="5">5 Overs</option>
+                        <option value="10">10 Overs</option>
+                        <option value="20">20 Overs</option>
+                    </select>
+                    <button class="btn btn-success" style="margin-top: 15px;" onclick="startMatch()">Start Match</button>
+                    <button class="btn btn-danger" onclick="stopMatch()">End Current Match</button>
+                </div>
+            </div>
+
+            <div id="live" class="screen">
+                <div class="match-card">
+                    <div class="teams-title" id="liveTeamsTitle">Team A vs Team B</div>
+                    <div class="main-score"><span id="liveRuns">0</span>-<span id="liveWickets">0</span> <span style="font-size: 22px; color: var(--text-muted);">(<span id="liveOvers">0.0</span>)</span></div>
+                    <div class="overs-rr">
+                        <span>CRR: <span id="liveCRR">0.00</span></span>
+                        <span>Innings: <span id="liveInnings">1</span></span>
+                    </div>
+                    <div class="target-box" id="targetBox">Target: <span id="liveTarget">0</span></div>
+
+                    <div class="keypad">
+                        <button class="key-btn" onclick="score(0)"><span class="key-run">0</span>Dot</button>
+                        <button class="key-btn" onclick="score(1)"><span class="key-run">1</span>Run</button>
+                        <button class="key-btn" onclick="score(2)"><span class="key-run">2</span>Runs</button>
+                        <button class="key-btn" onclick="score(3)"><span class="key-run">3</span>Runs</button>
+                        <button class="key-btn" onclick="score(4)"><span class="key-run">4</span>Four</button>
+                        <button class="key-btn" onclick="score(6)"><span class="key-run">6</span>Six</button>
+                        <button class="key-btn key-extra" onclick="extra('wd')">Wide</button>
+                        <button class="key-btn key-extra" onclick="extra('nb')">No Ball</button>
+                        <button class="key-btn key-out" onclick="wicket()">OUT!</button>
+                        <button class="key-btn key-undo" onclick="undo()">↩ Undo</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="history" class="screen">
+                <div class="card">
+                    <div class="card-header">📊 Match History</div>
+                    <div id="historyList"></div>
+                </div>
             </div>
         </div>
-
     </div>
 
     <script>
+        // ==========================================
+        // 🔒 LOGIN SYSTEM LOGIC
+        // ==========================================
+        const SECRET_PIN = "Legend@2026"; // YAHAN APNA PASSWORD BADAL SAKTE HAIN
+
+        function checkLogin() {
+            let enteredPin = document.getElementById('adminPassword').value;
+            let errorMsg = document.getElementById('loginError');
+            
+            if (enteredPin === SECRET_PIN) {
+                // Password Sahi Hai - Login screen chupao, Admin panel dikhao
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('mainAdminPanel').style.display = 'block';
+            } else {
+                // Password Galat Hai
+                errorMsg.style.display = 'block';
+            }
+        }
+
+        // ==========================================
+        // 🔴 FIREBASE & MATCH LOGIC
+        // ==========================================
+        
         // --- 1. APNI FIREBASE CONFIG YAHAN PASTE KAREIN ---
         const firebaseConfig = {
-          apiKey: "AIzaSyBpzzr3vTQoA0WrIUpgr2VV-oNO7QuLekc",
-            authDomain: "cricket-live-c10f1.firebaseapp.com",
-            databaseURL: "https://cricket-live-c10f1-default-rtdb.firebaseio.com",
-            projectId: "cricket-live-c10f1",
-            storageBucket: "cricket-live-c10f1.firebasestorage.app",
-            messagingSenderId: "707923793126",
-            appId: "1:707923793126:web:bce2ce512305601e6cd727"
+            apiKey: "YAHAN_APNI_API_KEY_DALEIN",
+            authDomain: "YAHAN_APNA_DOMAIN_DALEIN",
+            databaseURL: "YAHAN_APNA_DATABASE_URL_DALEIN",
+            projectId: "YAHAN_PROJECT_ID_DALEIN",
+            storageBucket: "YAHAN_STORAGE_BUCKET_DALEIN",
+            messagingSenderId: "YAHAN_SENDER_ID_DALEIN",
+            appId: "YAHAN_APP_ID_DALEIN"
         };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // --- 2. AAPKA STATE LOGIC ---
         let db = { teams: JSON.parse(localStorage.getItem('cricTeams')) || [], matches: JSON.parse(localStorage.getItem('cricHistory')) || [] };
         let match = { active: false, batTeam: '', bowlTeam: '', maxOvers: 0, innings: 1, target: null, runs: 0, wickets: 0, balls: 0, historyStack: [], matchStatus: '' };
 
@@ -236,7 +273,7 @@
             if(match.wickets >= 10 || match.balls >= (match.maxOvers * 6)) {
                 if(match.innings === 1) {
                     match.matchStatus = `Innings Break! Target for ${match.bowlTeam} is ${match.runs + 1}`;
-                    updateUIAndFirebase(); // Show message to users
+                    updateUIAndFirebase();
                     
                     setTimeout(() => {
                         match.innings = 2; match.target = match.runs + 1;
@@ -259,7 +296,6 @@
         }
 
         function updateUIAndFirebase() {
-            // Update Admin UI
             document.getElementById('liveRuns').innerText = match.runs;
             document.getElementById('liveWickets').innerText = match.wickets;
             let overCount = Math.floor(match.balls / 6);
@@ -269,7 +305,6 @@
             document.getElementById('liveInnings').innerText = match.innings;
             if(match.target) document.getElementById('liveTarget').innerText = match.target;
 
-            // SEND TO FIREBASE SO USERS CAN SEE
             database.ref('premiumMatch/live').set({
                 active: match.active, batTeam: match.batTeam, bowlTeam: match.bowlTeam,
                 runs: match.runs, wickets: match.wickets, balls: match.balls,
@@ -279,7 +314,7 @@
 
         function endMatch(resultText) {
             match.matchStatus = resultText;
-            updateUIAndFirebase(); // Send result to users
+            updateUIAndFirebase(); 
             
             setTimeout(() => {
                 alert("Match Over: " + resultText);
@@ -287,7 +322,7 @@
                 localStorage.setItem('cricHistory', JSON.stringify(db.matches));
                 
                 match.active = false;
-                updateUIAndFirebase(); // Clear user screen
+                updateUIAndFirebase(); 
                 switchTab('history');
             }, 3000);
         }
